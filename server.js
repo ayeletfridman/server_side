@@ -1,0 +1,15 @@
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+const rootRouter = require("./routes/index");
+app.use("/", rootRouter);
+
+const booksRouter = require("./routes/bookRoute");
+app.use("/api/books", booksRouter);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
