@@ -41,4 +41,17 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.post("/logout", (req, res) => {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+
+  if (!token) return res.status(400).json({ message: "missing token" });
+
+  const index = activeTokens.findIndex((t) => t.token === token);
+  if (index === -1) return res.status(404).json({ message: "token not found" });
+
+  activeTokens.splice(index, 1);
+  return res.status(200).json({ message: "logged out successfully" });
+});
+
 module.exports = router;
