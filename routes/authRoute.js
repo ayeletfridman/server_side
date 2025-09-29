@@ -4,14 +4,13 @@ const router = express.Router();
 const { users, activeTokens } = require("../data/db");
 const { generateToken } = require("../utils/generateToken");
 const { verifyPassword } = require("../utils/password");
+const { addToken, removeToken } = require("../services/tokens");
 
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body || {};
     if (!username || !password) {
-      return res
-        .status(400)
-        .json({ message: "username and password are required" });
+      return res.status(400).json({ message: "username and password are required" });
     }
 
     const user = users.find((u) => u.username === username);
@@ -25,11 +24,7 @@ router.post("/login", async (req, res) => {
     }
 
     const token = generateToken(48);
-    activeTokens.push({
-      username,
-      token,
-      createdAt: new Date().toISOString(),
-    });
+    addToken(username, token); 
 
     return res.status(200).json({
       token,
@@ -47,10 +42,9 @@ router.post("/logout", (req, res) => {
 
   if (!token) return res.status(400).json({ message: "missing token" });
 
-  const index = activeTokens.findIndex((t) => t.token === token);
-  if (index === -1) return res.status(404).json({ message: "token not found" });
+  const removed = removeToken(token);
+  if (!removed) return res.status(404).json({ message: "token not found" });
 
-  activeTokens.splice(index, 1);
   return res.status(200).json({ message: "logged out successfully" });
 });
 
