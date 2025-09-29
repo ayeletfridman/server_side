@@ -1,3 +1,5 @@
+const bcrypt = require("bcrypt");
+
 const books = [
   { id: 1, title: "Clean Code", author: "Robert C. Martin", year: 2008 },
   { id: 2, title: "You Don't Know JS", author: "Kyle Simpson", year: 2015 },
@@ -9,6 +11,11 @@ const books = [
   },
 ];
 
-const users = [{ username: "sara", password: "123456" }];
+const passwordPlain = "123456";
+const passwordHash = bcrypt.hashSync(passwordPlain, 10);
 
-module.exports = { books, users };
+const users = [{ username: "sara", passwordHash }];
+
+const activeTokens = [];
+
+module.exports = { books, users, activeTokens };
