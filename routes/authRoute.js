@@ -3,14 +3,16 @@ const router = express.Router();
 
 const { users, activeTokens } = require("../data/db");
 const { generateToken } = require("../utils/generateToken");
-const { verifyPassword } = require("../utils/password");
+const { verifyPassword, hashPassword } = require("../utils/password");
 const { addToken, removeToken } = require("../services/tokens");
 
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body || {};
     if (!username || !password) {
-      return res.status(400).json({ message: "username and password are required" });
+      return res
+        .status(400)
+        .json({ message: "username and password are required" });
     }
 
     const user = users.find((u) => u.username === username);
@@ -24,7 +26,7 @@ router.post("/login", async (req, res) => {
     }
 
     const token = generateToken(48);
-    addToken(username, token); 
+    addToken(username, token);
 
     return res.status(200).json({
       token,
@@ -46,6 +48,37 @@ router.post("/logout", (req, res) => {
   if (!removed) return res.status(404).json({ message: "token not found" });
 
   return res.status(200).json({ message: "logged out successfully" });
+});
+
+router.post("/register", async (req, res) => {
+  try {
+    const { username, password } = req.body || {};
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ message: "username and password are required" });
+    }
+
+    const exists = users.find((u) => u.username === username);
+    if (exists) {
+      return res.status(409).json({ message: "username already exists" });
+    }
+
+    const passwordHash = await hashPassword(password);
+    users.push({ username, passwordHash });
+
+    const token = generateToken(48);
+    activeTokens.push({ username, token, createdAt: new Date().toISOString() });
+
+    return res.status(201).json({
+      message: "registered successfully",
+      user: { username },
+      token,
+    });
+  } catch (err) {
+    console.error("Register error:", err);
+    return res.status(500).json({ message: "internal server error" });
+  }
 });
 
 module.exports = router;
